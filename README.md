@@ -1,37 +1,100 @@
-# streamlit-data-cross
-App para análisis y cruce de datos a partir de dos fuentes de datos
--------------------------------------------------------------------
+# Azure Arc Coverage Validation — Streamlit Dashboard
 
-Comparto esta app que me facilitó el cruce de información de dos fuentes de datos y obtener asi un reporte rápido del status de los equipos.
-Cómo analista de Ciberseguridad, se me encomendó la tarea de realizar de forma semanal el cruce de información entre la CMDB completa de servidores y un archivo CSV que exportamos a demanda desde Azure ARC, en el cual se reflejan los servidores que reportan a la consola y su estado.
-El objetivo: enviar un reporte del cumplimiento de los servidores "elegibles" para que todos cuenten con el agente instalado, activo y actualizado. 
-Para los casos de servidores que no aparecen en la consola de Azure Arc, o bien, que aparecen pero su estado es "Offline" o "Expired", se debia gestionar la instalación a actualización del agente.
+## Problem
 
-Esta tarea al ser manual, representaba una gran demanda de trabajo y que provocaba muchas veces errores en los cálculos, por lo cual busqué la forma de mejorar la tarea de cruce de información, dejando atrás las tablas dinámicas en Excel y pasando a un dashboard que contiene filtros dinámicos para obtener el numero preciso segun las caracteristicas y el estado.
+In hybrid environments, validating Azure Arc agent coverage across servers becomes repetitive and error-prone when done manually.
 
-¿Cómo probarlo?
-En tu máquina, debes tener instalado Python 3.x
-1. Crea un entorno virtual:
-   python -m venv venv
-2. Activa el entorno virtual:
-   venv\Scripts\activate
-3. Instala las dependencias listadas en el archivo requirements.txt:
-   pip install -r requirements.txt
-4. Ejecuta Streamlit:
-   streamlit run app.py
+The typical approach involves exporting the full CMDB and comparing it against a CSV export from Azure Arc. When this process is handled through spreadsheets and pivot tables, small filtering mistakes or inconsistent naming can produce incorrect compliance reports.
 
-En este repositorio subi dos fuentes de datos de ejemplo: cmdb.xlsx y AzureArc.csv, deben estar en la misma ubicación de app.py para que pueda leer los datos y hacer el merge.
+Over time, this leads to unreliable visibility of which servers are actually reporting to Azure Arc.
 
-Con estos dos archivos de ejemplo demostramos el funcionamiento completo:
+---
 
-- Carga de datos.
-- Filtros.
-- Cruce de información entre CMDB y Azure Arc.
-- Identificación de servidores con y sin agente.
-- Exportación final de resultados.
+## Context
 
-Importante:
-Para que funcione este código de ejemplo, los archivos a comparar deben contener esta información:
+This tool was built to support a recurring operational task:
 
-El archivo CMDB.xlsx debe contener una pestaña (sheet) llamada INFRAESTRUCTURA.
-El archivo AzureArc.csv debe tener las columnas HOST NAME, NAME y ARC AGENT STATUS.
+- Validate that all eligible servers have the Azure Arc agent installed.
+- Detect servers reporting as Offline or Expired.
+- Identify servers present in CMDB but missing from Azure Arc.
+- Generate filtered reports for remediation tracking.
+
+The environment assumes:
+
+- A structured CMDB export (Excel).
+- An Azure Arc CSV export from the portal.
+- Enterprise-scale datasets where manual validation does not scale reliably.
+
+---
+
+## Solution
+
+This application provides a consistent, repeatable validation process by:
+
+- Normalizing both data sources.
+- Performing a controlled merge between CMDB and Azure Arc datasets.
+- Classifying servers based on agent status.
+- Allowing dynamic filtering for targeted reporting.
+- Exporting results for operational follow-up.
+
+The objective is not to replace Azure governance tools, but to eliminate manual reconciliation errors.
+
+---
+
+## Architecture / Approach
+
+- Python for data processing.
+- Pandas for deterministic dataset merging.
+- Streamlit for interactive filtering and review.
+- Explicit column normalization to reduce mismatch caused by naming inconsistencies.
+
+Design choices:
+
+- Keep the logic transparent and maintainable.
+- Avoid unnecessary infrastructure dependencies.
+- Prioritize clarity over abstraction.
+- Build for operational repetition, not one-time analysis.
+
+This is a lightweight internal validation tool, not a platform.
+
+---
+
+## Operational Considerations
+
+- Accuracy depends on CMDB data quality.
+- Hostname consistency is critical for reliable matching.
+- Azure Arc exports must contain stable identifiers.
+- Designed for structured enterprise datasets.
+
+This tool improves visibility, but governance maturity still depends on process discipline.
+
+---
+
+## Usage
+
+Requirements:
+- Python 3.x
+
+Setup:
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+streamlit run app.py
+---
+Example datasets included:
+
+- `cmdb.xlsx` (Sheet: `INFRAESTRUCTURA`)
+- `AzureArc.csv` (Columns: `HOST NAME`, `NAME`, `ARC AGENT STATUS`)
+
+Both files must be placed in the same directory as `app.py`.
+
+---
+
+## Lessons Learned
+
+- Spreadsheet-based reconciliation does not scale operationally.
+- Small filtering mistakes can invalidate compliance reports.
+- Data normalization is often more important than visualization.
+- Lightweight tooling can significantly reduce recurring manual effort.
+- Visibility issues are frequently procedural, not technical.
+
